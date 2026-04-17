@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String
+  avatar    String?
+  isHost    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  listings  Listing[]
+  bookings  Booking[]
+  reviews   Review[]
+  favorites Favorite[]
+}
+
+model Listing {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  price       Float
+  location    String
+  lat         Float
+  lng         Float
+  images      String[]
+  maxGuests   Int
+  category    String
+  createdAt   DateTime @default(now())
+
+  host      User      @relation(fields: [hostId], references: [id])
+  hostId    String
+
+  bookings  Booking[]
+  reviews   Review[]
+  favorites Favorite[]
+}
+
+model Booking {
+  id         String        @id @default(uuid())
+  checkIn    DateTime
+  checkOut   DateTime
+  totalPrice Float
+  status     BookingStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
+
+  guest     User    @relation(fields: [guestId], references: [id])
+  guestId   String
+  listing   Listing @relation(fields: [listingId], references: [id])
+  listingId String
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+
+  author    User    @relation(fields: [authorId], references: [id])
+  authorId  String
+  listing   Listing @relation(fields: [listingId], references: [id])
+  listingId String
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String
+  listing   Listing @relation(fields: [listingId], references: [id])
+  listingId String
+
+  @@unique([userId, listingId])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}

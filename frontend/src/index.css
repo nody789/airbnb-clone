@@ -1,0 +1,4 @@
+/* Tailwind v3 的引入方式（和 v4 不同） */
+@tailwind base;       /* 重置瀏覽器預設樣式 */
+@tailwind components; /* 元件類別 */
+@tailwind utilities;  /* 工具類別（大部分 Tailwind class 都在這） */
