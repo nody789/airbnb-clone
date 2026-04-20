@@ -54,7 +54,7 @@
 |------|------|
 | **Vercel** | 前端部署，連結 GitHub 自動 CI/CD |
 | **Render** | 後端部署，免費方案（閒置 15 分鐘休眠，喚醒約 30 秒） |
-| **Supabase** | 免費雲端 PostgreSQL（500MB），可用 Navicat Premium Lite 連線 |
+| **Neon** | 免費雲端 PostgreSQL，無自動暫停，可用 Navicat Premium Lite 連線 |
 | **Cloudinary** | 免費圖片儲存（25GB） |
 
 ---
@@ -120,11 +120,32 @@ airbnb-clone/
 
 ---
 
+## 示範帳號
+
+> 執行 `cd backend && npm run seed` 後可使用以下帳號登入
+
+| 角色 | Email | 密碼 | 說明 |
+|------|-------|------|------|
+| 🏠 房東 | `host@demo.com` | `demo1234` | 可管理房源、查看訂單、確認/拒絕預訂 |
+| 🧳 旅客 | `guest@demo.com` | `demo1234` | 可瀏覽房源、訂房、收藏、留評論 |
+
+### 如何成為房東？
+
+任何一般帳號都可以升級為房東，步驟如下：
+
+1. 登入後，點右上角頭像 → **個人設定**
+2. 勾選「**開啟房東模式**」並儲存
+3. Navbar 選單會新增「**管理房源 / 訂單管理 / 刊登新房源**」
+
+> 升級後就能刊登房源、設定價格、接受旅客預訂。
+
+---
+
 ## 本機開發設定
 
 ### 前置需求
 - Node.js v20.19+ 或 v22+（目前 v20.12 也可以執行，僅有警告）
-- 資料庫：本機 PostgreSQL 或 [Supabase](https://supabase.com) 免費帳號
+- 資料庫：本機 PostgreSQL 或 [Neon](https://neon.tech) 免費帳號
 
 ### 1. Clone 專案
 
@@ -146,7 +167,8 @@ cp .env.example .env
 
 `.env` 範例：
 ```
-DATABASE_URL="postgresql://postgres:[密碼]@db.xxxx.supabase.co:5432/postgres"
+DATABASE_URL="postgresql://[帳號]:[密碼]@[host]-pooler.neon.tech/neondb?sslmode=require"
+DATABASE_URL_UNPOOLED="postgresql://[帳號]:[密碼]@[host].neon.tech/neondb?sslmode=require"
 JWT_SECRET="任意一段複雜的字串"
 PORT=5000
 ```
@@ -154,6 +176,9 @@ PORT=5000
 ```bash
 # 建立資料庫資料表
 npx prisma migrate dev --name init
+
+# 填入示範資料（可選）
+npm run seed
 
 # 啟動後端
 npm run dev
