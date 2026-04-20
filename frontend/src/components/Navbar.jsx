@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────
 // 登入後右側顯示下拉選單（仿 Airbnb 的漢堡+頭像按鈕）
 // 點擊按鈕外的區域會關閉選單（用 useEffect 監聽全域點擊）
+// 桌機版搜尋列可直接輸入地點和人數，按搜尋跳轉到首頁
 
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -11,14 +12,16 @@ import useAuthStore from '../stores/authStore'
 function Navbar() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
-  const [menuOpen, setMenuOpen] = useState(false)  // 下拉選單開關
-  const menuRef = useRef(null)  // 指向選單 DOM 節點，用於偵測點擊範圍
+  const [menuOpen, setMenuOpen] = useState(false)    // 下拉選單開關
+  const menuRef = useRef(null)                        // 指向選單 DOM，偵測點擊範圍
+
+  // 桌機搜尋列的本地狀態（按搜尋後才更新 URL）
+  const [searchLocation, setSearchLocation] = useState('')
+  const [searchGuests, setSearchGuests] = useState('')
 
   // 點擊選單外部時自動關閉
-  // useEffect cleanup：元件卸載時移除事件監聽，避免記憶體洩漏
   useEffect(() => {
     const handleClickOutside = (e) => {
-      // menuRef.current.contains(e.target)：點擊的元素是否在選單內
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false)
       }
@@ -33,32 +36,69 @@ function Navbar() {
     navigate('/')
   }
 
+  // 桌機搜尋：把條件轉成 URL query string，跳轉到首頁
+  // 例如：/?location=台北&guests=2
+  const handleDesktopSearch = (e) => {
+    e.preventDefault()
+    const params = new URLSearchParams()
+    if (searchLocation.trim()) params.set('location', searchLocation.trim())
+    if (searchGuests) params.set('guests', searchGuests)
+    // 跳轉到首頁並帶上搜尋參數
+    navigate(`/?${params.toString()}`)
+  }
+
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link to="/" className="text-rose-500 font-bold text-2xl tracking-tight">
+        <Link to="/" className="text-rose-500 font-bold text-2xl tracking-tight shrink-0">
           airbnb
         </Link>
 
-        {/* 搜尋列（桌機版） */}
-        <div className="hidden md:flex items-center border border-gray-300 rounded-full px-4 py-2 shadow-sm hover:shadow-md transition cursor-pointer">
-          <span className="text-sm font-medium text-gray-700 px-3 border-r border-gray-300">任何地點</span>
-          <span className="text-sm font-medium text-gray-700 px-3 border-r border-gray-300">任何週</span>
-          <span className="text-sm text-gray-500 px-3">新增旅客</span>
-          <div className="bg-rose-500 text-white rounded-full p-2 ml-2">
+        {/* 搜尋列（桌機版）── 實際可輸入的表單 */}
+        <form
+          onSubmit={handleDesktopSearch}
+          className="hidden md:flex items-center border border-gray-300 rounded-full shadow-sm hover:shadow-md transition overflow-hidden flex-1 max-w-md"
+        >
+          {/* 地點輸入 */}
+          <input
+            type="text"
+            placeholder="搜尋地點"
+            value={searchLocation}
+            onChange={(e) => setSearchLocation(e.target.value)}
+            className="flex-1 px-4 py-2 text-sm text-gray-700 focus:outline-none bg-transparent min-w-0"
+          />
+
+          {/* 分隔線 */}
+          <div className="h-5 w-px bg-gray-300 shrink-0" />
+
+          {/* 人數輸入 */}
+          <input
+            type="number"
+            placeholder="旅客人數"
+            min="1"
+            max="20"
+            value={searchGuests}
+            onChange={(e) => setSearchGuests(e.target.value)}
+            className="w-24 px-3 py-2 text-sm text-gray-700 focus:outline-none bg-transparent"
+          />
+
+          {/* 搜尋按鈕（放大鏡） */}
+          <button
+            type="submit"
+            className="bg-rose-500 hover:bg-rose-600 text-white rounded-full p-2 m-1 transition shrink-0"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-          </div>
-        </div>
+          </button>
+        </form>
 
         {/* 右側選單 */}
         {user ? (
           // ── 已登入：漢堡 + 頭像按鈕 ──
-          // relative：讓下拉選單可以用 absolute 定位在這個按鈕下方
-          <div className="relative" ref={menuRef}>
+          <div className="relative shrink-0" ref={menuRef}>
             <button
               onClick={() => setMenuOpen((prev) => !prev)}
               className="flex items-center gap-2 border border-gray-300 rounded-full pl-3 pr-1 py-1 hover:shadow-md transition"
@@ -78,11 +118,9 @@ function Navbar() {
 
             {/* 下拉選單 */}
             {menuOpen && (
-              // absolute right-0 top-12：定位在按鈕右下方
-              // shadow-lg：明顯的陰影讓選單浮起來
               <div className="absolute right-0 top-12 w-56 bg-white border border-gray-200 rounded-2xl shadow-lg py-2 z-50">
 
-                {/* 使用者名稱（不可點擊，只是顯示） */}
+                {/* 使用者名稱（只顯示，不可點擊） */}
                 <div className="px-4 py-2 border-b border-gray-100 mb-1">
                   <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
                   <p className="text-xs text-gray-400 truncate">{user.email}</p>
@@ -102,7 +140,7 @@ function Navbar() {
                   </>
                 )}
 
-                {/* 開啟房東模式的提示（isHost 為 false 時） */}
+                {/* 成為房東提示 */}
                 {!user.isHost && (
                   <>
                     <div className="border-t border-gray-100 my-1" />
@@ -124,7 +162,7 @@ function Navbar() {
           </div>
         ) : (
           // ── 未登入：登入/註冊按鈕 ──
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Link to="/login" className="text-sm font-medium text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-full transition">
               登入
             </Link>
