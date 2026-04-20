@@ -1,0 +1,42 @@
+# ─────────────────────────────────────────────
+# GitHub Actions：CI 自動測試
+# ─────────────────────────────────────────────
+# 觸發時機：每次 push 到 main 分支，或有 Pull Request 時
+# 做的事：自動進到 frontend/ 安裝套件 → 跑所有測試
+# 結果：GitHub 顯示 ✅ 或 ❌，讓你知道程式有沒有問題
+
+name: Run Tests  # 這個 CI 流程的名稱（會顯示在 GitHub 上）
+
+on:
+  push:
+    branches: [main]       # push 到 main 分支時觸發
+  pull_request:
+    branches: [main]       # 有人發 PR 到 main 時也觸發
+
+jobs:
+  test:
+    name: Frontend Unit Tests
+    runs-on: ubuntu-latest  # 在 GitHub 的 Linux 伺服器上執行
+
+    steps:
+      # 步驟 1：把你的程式碼下載到 GitHub 的伺服器上
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 步驟 2：安裝 Node.js 環境
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'       # 使用 Node.js 20
+          cache: 'npm'             # 快取 npm 套件，加快之後的執行速度
+          cache-dependency-path: frontend/package-lock.json
+
+      # 步驟 3：安裝前端套件（等同於你自己跑 npm install）
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci               # ci 比 install 更嚴格，確保版本一致
+
+      # 步驟 4：執行所有測試（unit tests + component tests）
+      - name: Run tests
+        working-directory: frontend
+        run: npm run test:run     # vitest run（跑完就結束，不是 watch 模式）

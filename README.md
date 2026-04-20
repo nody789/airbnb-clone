@@ -2,6 +2,8 @@
 
 仿 Airbnb 介面的全端住宿預訂平台，使用 React + Node.js 開發。
 
+![CI](https://github.com/nody789/airbnb-clone/actions/workflows/test.yml/badge.svg)
+
 ---
 
 ## 功能列表
@@ -47,6 +49,16 @@
 | **cors** | 2 | 允許前端（不同 port/domain）呼叫後端 API |
 | **dotenv** | 17 | 讀取 .env 設定檔，敏感資料（密碼、金鑰）不進版本控制 |
 | **Cloudinary SDK** | 2 | 免費圖片雲端儲存，預留圖片上傳功能（目前使用 URL 輸入） |
+
+### CI/CD
+
+| 工具 | 用途 |
+|------|------|
+| **GitHub Actions** | 每次 push 到 main，自動執行前端單元測試（CI） |
+| **Vercel** | 測試通過後，自動部署前端到正式環境（CD） |
+| **Render** | 後端程式碼更新後自動重新部署（CD） |
+
+> CI = 自動跑測試確保程式沒有壞掉；CD = 測試過了自動部署，不用手動上傳
 
 ### 部署（全免費）
 
