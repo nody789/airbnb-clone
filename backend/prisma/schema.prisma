@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")           // Pooled：給後端 API 查詢用
+  directUrl = env("DATABASE_URL_UNPOOLED")  // Direct：給 prisma migrate 用
 }
 
 model User {

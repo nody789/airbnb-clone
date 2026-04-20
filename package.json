@@ -1,0 +1,17 @@
+{
+  "name": "airbnb-clone",
+  "version": "1.0.0",
+  "description": "仿 Airbnb 介面的全端住宿預訂平台，使用 React + Node.js 開發。",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "frontend": "npm run dev --prefix frontend",
+    "backend": "npm run dev --prefix backend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
