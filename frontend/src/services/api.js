@@ -54,6 +54,7 @@ export const removeFavorite = (listingId) => api.delete(`/favorites/${listingId}
 // ── 個人資料 API ────────────────────────────────
 // PATCH：只傳要更新的欄位（不需要送出全部資料）
 export const updateProfile = (data) => api.patch('/auth/profile', data)
+export const changePassword = (data) => api.patch('/auth/password', data)
 
 // ── 房東訂單 API ────────────────────────────────
 export const getHostBookings = () => api.get('/bookings/host')

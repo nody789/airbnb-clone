@@ -8,7 +8,7 @@
 
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { updateProfile } from '../services/api'
+import { updateProfile, changePassword } from '../services/api'
 import useAuthStore from '../stores/authStore'
 
 function ProfilePage() {
@@ -34,6 +34,42 @@ function ProfilePage() {
       setSaved(true)
     },
   })
+
+  // 修改密碼表單狀態
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
+  const [pwError, setPwError] = useState('')
+  const [pwSaved, setPwSaved] = useState(false)
+
+  const handlePwChange = (e) => {
+    setPwForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    setPwError('')
+    setPwSaved(false)
+  }
+
+  const { mutate: savePassword, isPending: isSavingPw } = useMutation({
+    mutationFn: (data) => changePassword(data),
+    onSuccess: () => {
+      setPwSaved(true)
+      setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    },
+    onError: (err) => {
+      setPwError(err.response?.data?.message || '修改失敗，請稍後再試')
+    },
+  })
+
+  const handlePwSubmit = (e) => {
+    e.preventDefault()
+    setPwError('')
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      setPwError('新密碼與確認密碼不一致')
+      return
+    }
+    if (pwForm.newPassword.length < 6) {
+      setPwError('新密碼至少需要 6 個字元')
+      return
+    }
+    savePassword({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword })
+  }
 
   // 切換房東模式（獨立的 toggle，即時生效）
   const { mutate: toggleHost, isPending: isToggling } = useMutation({
@@ -118,6 +154,65 @@ function ProfilePage() {
             {/* 儲存成功提示，2 秒後靠 CSS 淡出（靠 saved state 控制顯示） */}
             {saved && (
               <p className="text-green-600 text-sm font-medium">✓ 已儲存</p>
+            )}
+          </div>
+        </form>
+
+        {/* ── 修改密碼 ── */}
+        <form onSubmit={handlePwSubmit} className="space-y-5 border-t border-gray-200 pt-8">
+          <h2 className="text-lg font-semibold text-gray-900">修改密碼</h2>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">目前密碼</label>
+            <input
+              type="password"
+              name="currentPassword"
+              value={pwForm.currentPassword}
+              onChange={handlePwChange}
+              placeholder="輸入目前的密碼"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">新密碼</label>
+            <input
+              type="password"
+              name="newPassword"
+              value={pwForm.newPassword}
+              onChange={handlePwChange}
+              placeholder="至少 6 個字元"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">確認新密碼</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={pwForm.confirmPassword}
+              onChange={handlePwChange}
+              placeholder="再輸入一次新密碼"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 transition"
+            />
+          </div>
+
+          {/* 錯誤訊息 */}
+          {pwError && (
+            <p className="text-sm text-red-500">{pwError}</p>
+          )}
+
+          <div className="flex items-center gap-4 pt-2">
+            <button
+              type="submit"
+              disabled={isSavingPw}
+              className="bg-gray-900 hover:bg-gray-700 disabled:bg-gray-300 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition"
+            >
+              {isSavingPw ? '更新中...' : '更新密碼'}
+            </button>
+            {pwSaved && (
+              <p className="text-green-600 text-sm font-medium">✓ 密碼已更新</p>
             )}
           </div>
         </form>

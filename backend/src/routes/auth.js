@@ -107,4 +107,37 @@ router.patch('/profile', authenticate, async (req, res) => {
   }
 })
 
+// ── 修改密碼 ───────────────────────────────────
+// 需要先輸入舊密碼確認身份，才能設定新密碼
+router.patch('/password', authenticate, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: '請填寫目前密碼和新密碼' })
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: '新密碼至少需要 6 個字元' })
+    }
+
+    // 取出含密碼欄位的完整使用者資料（平常 select 都排除密碼）
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } })
+
+    // 驗證目前密碼是否正確
+    const valid = await bcrypt.compare(currentPassword, user.password)
+    if (!valid) return res.status(400).json({ message: '目前密碼不正確' })
+
+    // 雜湊新密碼後存入資料庫
+    const hashed = await bcrypt.hash(newPassword, 10)
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { password: hashed },
+    })
+
+    res.json({ message: '密碼已更新' })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
 export default router
